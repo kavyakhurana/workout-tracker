@@ -313,9 +313,11 @@ public class DashboardWindow extends JFrame {
                 String oldCalStr = rs.getString("calories_burnt");
                 String oldRepsStr = rs.getString("reps");
                 String oldTimeStr = rs.getString("time_spent");
-    
+                
                 boolean caloriesUnchanged = (oldCalStr == null && newCalStr == null) ||
                                             (oldCalStr != null && oldCalStr.equals(newCalStr));
+
+                System.out.println("calories unchanged :"+caloriesUnchanged);
     
                 boolean repsChanged = (oldRepsStr == null && newRepsStr != null) ||
                                       (oldRepsStr != null && !oldRepsStr.equals(newRepsStr));
