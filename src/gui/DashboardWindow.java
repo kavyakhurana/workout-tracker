@@ -267,7 +267,7 @@ public class DashboardWindow extends JFrame {
                     tableModel.updateData(workouts); // ok even if empty
                 } catch (Exception e) {
                     e.printStackTrace();
-                    JOptionPane.showMessageDialog(DashboardWindow.this, "❌ Error loading workouts: " + e.getMessage());
+                    
                 }
             }
         }.execute();
