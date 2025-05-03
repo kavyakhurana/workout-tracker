@@ -262,8 +262,9 @@ public class DashboardWindow extends JFrame {
             protected void done() {
                 try {
                     ArrayList<Object[]> workouts = get();
-                    tableModel.updateData(workouts);
+                    tableModel.updateData(workouts);  // This is fine even if workouts is empty
                 } catch (Exception e) {
+                    e.printStackTrace();  // Optional: debug in terminal
                     JOptionPane.showMessageDialog(DashboardWindow.this, "❌ Error loading workouts: " + e.getMessage());
                 }
             }
