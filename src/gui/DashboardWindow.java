@@ -296,38 +296,52 @@ public class DashboardWindow extends JFrame {
     }
 
     private void saveEditedRowToDatabase(Object[] rowData) {
+        System.out.println("making some changes here!");
         int id = (int) rowData[0];
+        String workoutName = (String) rowData[1];
         Object repsObj = rowData[2];
         Object timeObj = rowData[3];
         Object caloriesObj = rowData[4];
     
+        Integer reps = (repsObj == null || repsObj.toString().equals("N/A")) ? null : Integer.parseInt(repsObj.toString());
+        Integer time = (timeObj == null || timeObj.toString().equals("N/A")) ? null : Integer.parseInt(timeObj.toString());
+        Integer calories = (caloriesObj == null || caloriesObj.toString().equals("N/A")) ? null : Integer.parseInt(caloriesObj.toString());
+    
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
+            // Auto-estimate calories if missing
+            if (calories == null && (reps != null || time != null)) {
+                Double estimated = CalorieEstimatorClient.estimateCalories(workoutName, reps, time);
+                if (estimated != null) {
+                    calories = (int) Math.round(estimated);
+                }
+            }
+    
             String update = "UPDATE workouts SET reps = ?, time_spent = ?, calories_burnt = ? WHERE id = ?";
             PreparedStatement stmt = conn.prepareStatement(update);
     
-            if (repsObj == null || repsObj.toString().equals("N/A")) {
+            if (reps == null) {
                 stmt.setNull(1, java.sql.Types.INTEGER);
             } else {
-                stmt.setInt(1, Integer.parseInt(repsObj.toString()));
+                stmt.setInt(1, reps);
             }
     
-            if (timeObj == null || timeObj.toString().equals("N/A")) {
+            if (time == null) {
                 stmt.setNull(2, java.sql.Types.INTEGER);
             } else {
-                stmt.setInt(2, Integer.parseInt(timeObj.toString()));
+                stmt.setInt(2, time);
             }
     
-            if (caloriesObj == null || caloriesObj.toString().equals("N/A")) {
+            if (calories == null) {
                 stmt.setNull(3, java.sql.Types.INTEGER);
             } else {
-                stmt.setInt(3, Integer.parseInt(caloriesObj.toString()));
+                stmt.setInt(3, calories);
             }
     
             stmt.setInt(4, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to save changes: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "❌ Failed to save changes: " + e.getMessage());
         }
     }
 
