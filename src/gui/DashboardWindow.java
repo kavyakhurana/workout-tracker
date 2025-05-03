@@ -187,8 +187,7 @@ public class DashboardWindow extends JFrame {
             LocalDate today = LocalDate.now();
             LocalDate oneYearAgo = today.minusYears(1);
             LocalDate earliestDate = oneYearAgo;
-    
-            // Step 1: Get earliest workout date for this user
+
             String query = "SELECT MIN(date) AS earliest FROM workouts WHERE username = ?";
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, username);
@@ -196,28 +195,21 @@ public class DashboardWindow extends JFrame {
     
             if (rs.next()) {
                 String earliestStr = rs.getString("earliest");
-                System.out.println("🟡 Earliest date from DB: " + earliestStr);
+               
                 if (earliestStr != null) {
                     LocalDate dbDate = LocalDate.parse(earliestStr);
                     if (dbDate.isBefore(oneYearAgo)) {
                         earliestDate = dbDate;
-                        System.out.println("✅ Overriding oneYearAgo with actual earliest: " + dbDate);
-                    } else {
-                        System.out.println("ℹ️ DB earliest is within last year, keeping oneYearAgo.");
-                    }
-                } else {
-                    System.out.println("⚠️ No workouts found — keeping oneYearAgo.");
-                }
+                   
+                    } 
+                } 
             }
     
-            // Step 2: Fill all dates from earliestDate to today
-            System.out.println("🔁 Populating dropdown from " + earliestDate + " to " + today);
+    
             for (LocalDate date = earliestDate; !date.isAfter(today); date = date.plusDays(1)) {
                 String pretty = formatPrettyDate(date);
                 dateDropdown.addItem(pretty);
                 prettyToDbDate.put(pretty, date.toString());
-    
-                System.out.println("📅 Added to dropdown: " + pretty + " -> " + date);
             }
     
             // Step 3: Set today's date as selected
@@ -232,13 +224,22 @@ public class DashboardWindow extends JFrame {
     }
 
     public void refreshWorkoutView() {
+        System.out.println("CHANGES!!");
         new SwingWorker<ArrayList<Object[]>, Void>() {
             @Override
             protected ArrayList<Object[]> doInBackground() throws Exception {
                 ArrayList<Object[]> workouts = new ArrayList<>();
                 String selectedPretty = (String) dateDropdown.getSelectedItem();
+    
+                // Gracefully handle empty or mismatched selection
+                if (selectedPretty == null || !prettyToDbDate.containsKey(selectedPretty)) {
+                    System.out.println("⚠️ No valid date selected.");
+                    return workouts;
+                }
+    
                 String selectedDbDate = prettyToDbDate.get(selectedPretty);
-
+                System.out.println("🔍 Loading workouts for: " + selectedDbDate);
+    
                 try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
                     String query = "SELECT id, workout_name, reps, time_spent, calories_burnt FROM workouts WHERE username = ? AND date = ?";
                     PreparedStatement stmt = conn.prepareStatement(query);
@@ -258,13 +259,14 @@ public class DashboardWindow extends JFrame {
                 return workouts;
             }
 
+            
             @Override
             protected void done() {
                 try {
                     ArrayList<Object[]> workouts = get();
-                    tableModel.updateData(workouts);  // This is fine even if workouts is empty
+                    tableModel.updateData(workouts); // ok even if empty
                 } catch (Exception e) {
-                    e.printStackTrace();  // Optional: debug in terminal
+                    e.printStackTrace();
                     JOptionPane.showMessageDialog(DashboardWindow.this, "❌ Error loading workouts: " + e.getMessage());
                 }
             }
