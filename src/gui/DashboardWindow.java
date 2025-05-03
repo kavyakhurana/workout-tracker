@@ -303,7 +303,7 @@ public class DashboardWindow extends JFrame {
         String newCalStr = rowData[4] == null ? null : rowData[4].toString();
     
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
-            // Step 1: Fetch existing values from DB
+    
             String fetch = "SELECT reps, time_spent, calories_burnt FROM workouts WHERE id = ?";
             PreparedStatement fetchStmt = conn.prepareStatement(fetch);
             fetchStmt.setInt(1, id);
@@ -327,16 +327,15 @@ public class DashboardWindow extends JFrame {
                 Integer time = (newTimeStr == null || newTimeStr.equals("N/A")) ? null : Integer.parseInt(newTimeStr);
                 Integer calories = (newCalStr == null || newCalStr.equals("N/A")) ? null : Integer.parseInt(newCalStr);
     
-                // Step 2: Call API only if calories field is unchanged AND reps or time changed
+
                 if (caloriesUnchanged && (repsChanged || timeChanged)) {
                     Double estimated = CalorieEstimatorClient.estimateCalories(workoutName, reps, time);
                     if (estimated != null) {
                         calories = (int) Math.round(estimated);
-                        System.out.println("✅ Auto-estimated calories: " + calories);
+                        System.out.println("Auto-estimated calories: " + calories);
                     }
                 }
     
-                // Step 3: Update DB
                 String update = "UPDATE workouts SET reps = ?, time_spent = ?, calories_burnt = ? WHERE id = ?";
                 PreparedStatement stmt = conn.prepareStatement(update);
     
@@ -355,7 +354,7 @@ public class DashboardWindow extends JFrame {
     
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "❌ Failed to save changes: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Failed to save changes: " + e.getMessage());
         }
     }
 
