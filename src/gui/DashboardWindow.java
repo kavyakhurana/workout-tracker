@@ -392,41 +392,17 @@ public class DashboardWindow extends JFrame {
     }
 
     private void exportAllWorkoutsToCSV() {
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
-            String query = "SELECT date, workout_name, reps, time_spent, calories_burnt FROM workouts WHERE username = ? ORDER BY date DESC";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
+        try {
+            String userHome = System.getProperty("user.home");
+            String downloadsPath = userHome + "/Downloads/workouts_export.csv";
     
-            StringBuilder csv = new StringBuilder("Date,Workout,Reps,Time (min),Calories\n");
+
+            util.CSVExporter.exportWorkouts(username, downloadsPath);
     
-            while (rs.next()) {
-                String date = rs.getString("date");
-                String workout = rs.getString("workout_name");
-                String reps = rs.getString("reps");
-                String time = rs.getString("time_spent");
-                String cal = rs.getString("calories_burnt");
-    
-                csv.append(String.format("%s,%s,%s,%s,%s\n",
-                    date,
-                    workout == null ? "" : workout,
-                    reps == null ? "" : reps,
-                    time == null ? "" : time,
-                    cal == null ? "" : cal
-                ));
-            }
-    
-            JFileChooser chooser = new JFileChooser();
-            chooser.setSelectedFile(new java.io.File("workouts_export.csv"));
-            int choice = chooser.showSaveDialog(this);
-            if (choice == JFileChooser.APPROVE_OPTION) {
-                java.nio.file.Files.writeString(chooser.getSelectedFile().toPath(), csv.toString());
-                JOptionPane.showMessageDialog(this, "Workouts exported successfully!");
-            }
-    
+            JOptionPane.showMessageDialog(this, "Workouts exported to Downloads!");
         } catch (Exception ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to export: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Failed to export workouts: " + ex.getMessage());
         }
     }
 }
