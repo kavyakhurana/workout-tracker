@@ -11,6 +11,7 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+import gui.WorkoutTableModel;
 
 public class DashboardWindow extends JFrame {
     private String username;
