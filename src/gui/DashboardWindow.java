@@ -41,6 +41,7 @@ public class DashboardWindow extends JFrame {
     private JPanel bottomPanel;
 
     private void addTopPanel() {
+        System.out.println("hi");
         topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JLabel welcome = new JLabel("Welcome, " + username + "!");
         welcome.setFont(new Font("Arial", Font.BOLD, 18));
@@ -94,11 +95,15 @@ public class DashboardWindow extends JFrame {
         JButton estimateButton = new JButton("Get Calorie Estimate");
         estimateButton.addActionListener(e -> estimateCaloriesForSelectedRow());
     
-        JButton editButton = new JButton("Edit Selected Row"); // ✨ new button
+        JButton editButton = new JButton("Edit Selected Row"); 
         editButton.addActionListener(e -> editSelectedRow());
 
-        JButton trendsButton = new JButton("View Workout Trends 📈");
+        JButton trendsButton = new JButton("View Workout Trends");
         trendsButton.addActionListener(e -> showTrendsChart());
+
+        JButton exportButton = new JButton("Export CSV");
+        exportButton.addActionListener(e -> exportAllWorkoutsToCSV());
+        bottomPanel.add(exportButton);
 
         bottomPanel.add(trendsButton);
     
@@ -170,11 +175,11 @@ public class DashboardWindow extends JFrame {
                 stmt.setInt(4, id);
                 stmt.executeUpdate();
     
-                JOptionPane.showMessageDialog(this, "✅ Workout updated!");
+                JOptionPane.showMessageDialog(this, "Workout updated!");
                 refreshWorkoutView();
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "❌ Failed to save changes: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Failed to save changes: " + ex.getMessage());
             }
         }
     }
@@ -211,15 +216,14 @@ public class DashboardWindow extends JFrame {
                 dateDropdown.addItem(pretty);
                 prettyToDbDate.put(pretty, date.toString());
             }
-    
-            // Step 3: Set today's date as selected
+
             String todayPretty = formatPrettyDate(today);
             dateDropdown.setSelectedItem(todayPretty);
-            System.out.println("✅ Set selected date to today: " + todayPretty);
+            System.out.println("Set selected date to today: " + todayPretty);
     
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "❌ Error loading dates: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error loading dates: " + e.getMessage());
         }
     }
 
@@ -231,14 +235,13 @@ public class DashboardWindow extends JFrame {
                 ArrayList<Object[]> workouts = new ArrayList<>();
                 String selectedPretty = (String) dateDropdown.getSelectedItem();
     
-                // Gracefully handle empty or mismatched selection
                 if (selectedPretty == null || !prettyToDbDate.containsKey(selectedPretty)) {
-                    System.out.println("⚠️ No valid date selected.");
+                    System.out.println("No valid date selected.");
                     return workouts;
                 }
     
                 String selectedDbDate = prettyToDbDate.get(selectedPretty);
-                System.out.println("🔍 Loading workouts for: " + selectedDbDate);
+                System.out.println("Loading workouts for: " + selectedDbDate);
     
                 try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
                     String query = "SELECT id, workout_name, reps, time_spent, calories_burnt FROM workouts WHERE username = ? AND date = ?";
@@ -264,10 +267,9 @@ public class DashboardWindow extends JFrame {
             protected void done() {
                 try {
                     ArrayList<Object[]> workouts = get();
-                    tableModel.updateData(workouts); // ok even if empty
+                    tableModel.updateData(workouts); 
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    
+                    System.out.println("error getting workouts"); 
                 }
             }
         }.execute();
@@ -285,7 +287,7 @@ public class DashboardWindow extends JFrame {
             PreparedStatement stmt = conn.prepareStatement(delete);
             stmt.setInt(1, id);
             stmt.executeUpdate();
-            JOptionPane.showMessageDialog(this, "✅ Row deleted!");
+            JOptionPane.showMessageDialog(this, "Row deleted!");
             refreshWorkoutView();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -324,7 +326,7 @@ public class DashboardWindow extends JFrame {
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "❌ Failed to save changes: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Failed to save changes: " + e.getMessage());
         }
     }
 
@@ -342,7 +344,6 @@ public class DashboardWindow extends JFrame {
         Object timeObj = rowData[3];
         Object caloriesObj = rowData[4];
     
-        // Ask if calories already exist
         if (caloriesObj != null && !caloriesObj.toString().equalsIgnoreCase("N/A")) {
             int choice = JOptionPane.showConfirmDialog(this,
                     "Calories already exist. Do you want to override them?",
@@ -350,7 +351,7 @@ public class DashboardWindow extends JFrame {
                     JOptionPane.YES_NO_OPTION);
     
             if (choice != JOptionPane.YES_OPTION) {
-                return; // user cancelled
+                return; 
             }
         }
     
@@ -371,7 +372,7 @@ public class DashboardWindow extends JFrame {
                 ex.printStackTrace();
             }
         } else {
-            JOptionPane.showMessageDialog(this, "❌ We don't have the calories of this exercise now! Check again soon!");
+            JOptionPane.showMessageDialog(this, "We don't have the calories of this exercise now! Check again soon!");
         }
     }
 
@@ -388,5 +389,44 @@ public class DashboardWindow extends JFrame {
         int year = date.getYear();
 
         return day + suffix + " " + month + " " + year;
+    }
+
+    private void exportAllWorkoutsToCSV() {
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
+            String query = "SELECT date, workout_name, reps, time_spent, calories_burnt FROM workouts WHERE username = ? ORDER BY date DESC";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+    
+            StringBuilder csv = new StringBuilder("Date,Workout,Reps,Time (min),Calories\n");
+    
+            while (rs.next()) {
+                String date = rs.getString("date");
+                String workout = rs.getString("workout_name");
+                String reps = rs.getString("reps");
+                String time = rs.getString("time_spent");
+                String cal = rs.getString("calories_burnt");
+    
+                csv.append(String.format("%s,%s,%s,%s,%s\n",
+                    date,
+                    workout == null ? "" : workout,
+                    reps == null ? "" : reps,
+                    time == null ? "" : time,
+                    cal == null ? "" : cal
+                ));
+            }
+    
+            JFileChooser chooser = new JFileChooser();
+            chooser.setSelectedFile(new java.io.File("workouts_export.csv"));
+            int choice = chooser.showSaveDialog(this);
+            if (choice == JFileChooser.APPROVE_OPTION) {
+                java.nio.file.Files.writeString(chooser.getSelectedFile().toPath(), csv.toString());
+                JOptionPane.showMessageDialog(this, "Workouts exported successfully!");
+            }
+    
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to export: " + ex.getMessage());
+        }
     }
 }

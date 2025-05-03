@@ -11,7 +11,6 @@ public class CalorieEstimatorController {
     private static final Map<String, Double> exerciseCaloriesPerUnit = new HashMap<>();
 
     static {
-        // Strength (lowercased keys)
         exerciseCaloriesPerUnit.put("bench press", 0.6);
         exerciseCaloriesPerUnit.put("chest press", 0.5);
         exerciseCaloriesPerUnit.put("pushups", 0.4);
@@ -29,10 +28,8 @@ public class CalorieEstimatorController {
         exerciseCaloriesPerUnit.put("sit-ups", 0.25);
         exerciseCaloriesPerUnit.put("russian twists", 0.2);
 
-        // Core
-        exerciseCaloriesPerUnit.put("plank", 0.07); // per second
+        exerciseCaloriesPerUnit.put("plank", 0.07); 
 
-        // Cardio
         exerciseCaloriesPerUnit.put("running", 10.0);
         exerciseCaloriesPerUnit.put("cycling", 8.0);
         exerciseCaloriesPerUnit.put("rowing", 9.0);
@@ -41,7 +38,8 @@ public class CalorieEstimatorController {
 
     @PostMapping
     public Map<String, Double> estimateCalories(@RequestBody WorkoutRequest request) {
-        // Preprocess exercise name smartly
+
+        // pre processing workout names to account for different spaces and different cases
         String exerciseKey = request.getExercise().trim().toLowerCase().replaceAll("\\s+", " ");
 
         double perUnit = exerciseCaloriesPerUnit.getOrDefault(exerciseKey, 0.4);

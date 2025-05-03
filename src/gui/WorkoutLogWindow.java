@@ -48,7 +48,7 @@ public class WorkoutLogWindow extends JFrame {
     }
 
     private void saveWorkout() {
-        System.out.println("⚡️ Save workout called");
+        System.out.println("Save workout called");
         String workout = workoutField.getText().trim();
         String reps = repsField.getText().trim();
         String time = timeField.getText().trim();
@@ -89,7 +89,7 @@ public class WorkoutLogWindow extends JFrame {
                     }
 
                     int rows = stmt.executeUpdate();
-                    System.out.println("✅ Inserted rows: " + rows);
+                    System.out.println("Inserted rows: " + rows);
                     return rows > 0;
                 } catch (SQLException | NumberFormatException ex) {
                     ex.printStackTrace();
@@ -102,15 +102,15 @@ public class WorkoutLogWindow extends JFrame {
                 try {
                     boolean success = get();
                     if (success) {
-                        JOptionPane.showMessageDialog(WorkoutLogWindow.this, "✅ Workout saved!");
+                        JOptionPane.showMessageDialog(WorkoutLogWindow.this, "Workout saved!");
                         dashboard.refreshWorkoutView();
                         dispose();
                     } else {
-                        JOptionPane.showMessageDialog(WorkoutLogWindow.this, "❌ Failed to save workout.");
+                        JOptionPane.showMessageDialog(WorkoutLogWindow.this, "Failed to save workout.");
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(WorkoutLogWindow.this, "❌ Unexpected error: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(WorkoutLogWindow.this, "Unexpected error: " + ex.getMessage());
                 }
             }
         }.execute();

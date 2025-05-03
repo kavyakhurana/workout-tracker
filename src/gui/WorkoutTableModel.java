@@ -38,7 +38,7 @@ public class WorkoutTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         if (columnIndex >= data.get(rowIndex).length) {
-            return "N/A";  // Very important: show N/A if missing
+            return "N/A";  
         }
         Object value = data.get(rowIndex)[columnIndex];
         return value == null ? "N/A" : value;
@@ -46,7 +46,6 @@ public class WorkoutTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        // Allow editing Reps (2), Time (3), Calories (4)
         return column == 2 || column == 3 || column == 4;
     }
 

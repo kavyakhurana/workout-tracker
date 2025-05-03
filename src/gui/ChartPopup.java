@@ -34,7 +34,7 @@ public class ChartPopup extends JFrame {
                 }
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "❌ DB Error: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "SQLite Database Error: " + e.getMessage());
             dispose();
             dashboard.setVisible(true);
             return;
@@ -51,14 +51,14 @@ public class ChartPopup extends JFrame {
             );
             chartPanel = new ChartPanel(chart);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "❌ Chart Error: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Chart Error: " + e.getMessage());
             dispose();
             dashboard.setVisible(true);
             return;
         }
 
         // Back button
-        JButton backButton = new JButton("← Back to Dashboard");
+        JButton backButton = new JButton(" <- Back to Dashboard");
         backButton.addActionListener(e -> {
             this.dispose();
             dashboard.setVisible(true);
@@ -70,8 +70,8 @@ public class ChartPopup extends JFrame {
         add(chartPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        pack(); // force layout calculation
-        setSize(700, 500); // ensure size
+        pack(); 
+        setSize(700, 500); 
         setLocationRelativeTo(null);
         setVisible(true);
     }

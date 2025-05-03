@@ -3,7 +3,7 @@ package com.kavyakhuranakk5554.calorieestimator;
 public class WorkoutRequest {
     private String exercise;
     private int reps;
-    private Integer timeSpent; // in minutes
+    private Integer timeSpent; 
 
     public String getExercise() {
         return exercise;

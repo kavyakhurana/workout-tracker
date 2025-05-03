@@ -48,11 +48,11 @@ public class LoginWindow extends JFrame {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                JOptionPane.showMessageDialog(this, "✅ Login successful!");
+                JOptionPane.showMessageDialog(this, "Login successful!");
                 dispose();
                 new DashboardWindow(username).setVisible(true);
             } else {
-                JOptionPane.showMessageDialog(this, "❌ Invalid credentials.");
+                JOptionPane.showMessageDialog(this, "Invalid credentials.");
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage());
@@ -75,7 +75,7 @@ public class LoginWindow extends JFrame {
             ResultSet checkRs = checkStmt.executeQuery();
 
             if (checkRs.next()) {
-                JOptionPane.showMessageDialog(this, "⚠️ Account already exists!");
+                JOptionPane.showMessageDialog(this, "Account already exists!");
                 return;
             }
 
@@ -85,7 +85,7 @@ public class LoginWindow extends JFrame {
             stmt.setString(2, password);
             stmt.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "✅ Registered and logged in!");
+            JOptionPane.showMessageDialog(this, "Registered and logged in!");
             dispose();
             new DashboardWindow(username).setVisible(true);
         } catch (SQLException ex) {

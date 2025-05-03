@@ -22,7 +22,7 @@ public class CalorieEstimatorClient {
 
             Map<String, Object> payload = new HashMap<>();
             payload.put("exercise", exercise);
-            payload.put("reps", reps == null ? 0 : reps); // fallback to 0 if reps missing
+            payload.put("reps", reps == null ? 0 : reps); // fallback to 0 in case reps are missing 
             if (timeSpent != null) {
                 payload.put("timeSpent", timeSpent);
             }
@@ -42,7 +42,7 @@ public class CalorieEstimatorClient {
                 Map<String, Double> map = gson.fromJson(response, Map.class);
                 return map.get("calories");
             } else {
-                System.out.println("❌ API call failed with code " + responseCode);
+                System.out.println("API call failed!!!! Response code: " + responseCode);
             }
         } catch (Exception e) {
             e.printStackTrace();
