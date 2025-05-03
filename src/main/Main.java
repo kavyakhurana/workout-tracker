@@ -1,8 +1,9 @@
+package main;
 import javax.swing.*;
 import java.sql.*;
 import gui.LoginWindow;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
             String createTable = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL);";

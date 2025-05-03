@@ -1,7 +1,6 @@
 package gui;
 
 import api.CalorieEstimatorClient;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -22,9 +21,8 @@ public class DashboardWindow extends JFrame {
 
     public DashboardWindow(String username) {
         this.username = username;
-
-        setTitle("Dashboard - " + username);
-        setSize(900, 600);
+        setTitle(username+"'s dashboard");
+        setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -32,8 +30,9 @@ public class DashboardWindow extends JFrame {
         addTopPanel();
         addCenterTable();
         addBottomButtons();
-
+        System.out.println("Calling load avl dates");
         loadAvailableDates();
+        System.out.println("bye load avl dates");
         refreshWorkoutView();
     }
 
@@ -111,58 +110,9 @@ public class DashboardWindow extends JFrame {
     }
 
     private void showTrendsChart() {
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
-            String query = "SELECT date, SUM(calories_burnt) AS total_calories, SUM(time_spent) AS total_time " +
-                           "FROM workouts WHERE username = ? GROUP BY date ORDER BY date ASC";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
-    
-            // Create datasets
-            var caloriesDataset = new org.jfree.data.category.DefaultCategoryDataset();
-            var timeDataset = new org.jfree.data.category.DefaultCategoryDataset();
-    
-            while (rs.next()) {
-                String date = rs.getString("date");
-                int calories = rs.getInt("total_calories");
-                int time = rs.getInt("total_time");
-    
-                caloriesDataset.addValue(calories, "Calories Burnt", date);
-                timeDataset.addValue(time, "Time Spent (min)", date);
-            }
-    
-            // Create two charts
-            var caloriesChart = org.jfree.chart.ChartFactory.createLineChart(
-                    "Calories Burnt Per Day",
-                    "Date",
-                    "Calories",
-                    caloriesDataset
-            );
-    
-            var timeChart = org.jfree.chart.ChartFactory.createBarChart(
-                    "Time Spent Working Out Per Day",
-                    "Date",
-                    "Time (min)",
-                    timeDataset
-            );
-    
-            // Panels
-            JPanel chartPanel = new JPanel(new GridLayout(2, 1));
-            chartPanel.add(new org.jfree.chart.ChartPanel(caloriesChart));
-            chartPanel.add(new org.jfree.chart.ChartPanel(timeChart));
-    
-            // Show in new window
-            JFrame trendsFrame = new JFrame("Workout Trends for " + username);
-            trendsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            trendsFrame.setSize(900, 700);
-            trendsFrame.setLocationRelativeTo(null);
-            trendsFrame.add(chartPanel);
-            trendsFrame.setVisible(true);
-    
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "❌ Error generating charts: " + e.getMessage());
-        }
+        this.setVisible(false); 
+        new ChartPopup(username, this).setVisible(true);
+        
     }
 
     private void editSelectedRow() {
@@ -231,26 +181,53 @@ public class DashboardWindow extends JFrame {
 
     private void loadAvailableDates() {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
-            String query = "SELECT DISTINCT date FROM workouts WHERE username = ? ORDER BY date DESC";
+            dateDropdown.removeAllItems();
+            prettyToDbDate.clear();
+    
+            LocalDate today = LocalDate.now();
+            LocalDate oneYearAgo = today.minusYears(1);
+            LocalDate earliestDate = oneYearAgo;
+    
+            // Step 1: Get earliest workout date for this user
+            String query = "SELECT MIN(date) AS earliest FROM workouts WHERE username = ?";
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
-
-            dateDropdown.removeAllItems();
-            prettyToDbDate.clear();
-
-            while (rs.next()) {
-                String dbDate = rs.getString("date");
-                String prettyDate = formatPrettyDate(LocalDate.parse(dbDate));
-                dateDropdown.addItem(prettyDate);
-                prettyToDbDate.put(prettyDate, dbDate);
+    
+            if (rs.next()) {
+                String earliestStr = rs.getString("earliest");
+                System.out.println("🟡 Earliest date from DB: " + earliestStr);
+                if (earliestStr != null) {
+                    LocalDate dbDate = LocalDate.parse(earliestStr);
+                    if (dbDate.isBefore(oneYearAgo)) {
+                        earliestDate = dbDate;
+                        System.out.println("✅ Overriding oneYearAgo with actual earliest: " + dbDate);
+                    } else {
+                        System.out.println("ℹ️ DB earliest is within last year, keeping oneYearAgo.");
+                    }
+                } else {
+                    System.out.println("⚠️ No workouts found — keeping oneYearAgo.");
+                }
             }
-
-            String todayPretty = formatPrettyDate(LocalDate.now());
+    
+            // Step 2: Fill all dates from earliestDate to today
+            System.out.println("🔁 Populating dropdown from " + earliestDate + " to " + today);
+            for (LocalDate date = earliestDate; !date.isAfter(today); date = date.plusDays(1)) {
+                String pretty = formatPrettyDate(date);
+                dateDropdown.addItem(pretty);
+                prettyToDbDate.put(pretty, date.toString());
+    
+                System.out.println("📅 Added to dropdown: " + pretty + " -> " + date);
+            }
+    
+            // Step 3: Set today's date as selected
+            String todayPretty = formatPrettyDate(today);
             dateDropdown.setSelectedItem(todayPretty);
-
+            System.out.println("✅ Set selected date to today: " + todayPretty);
+    
         } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "❌ Error loading dates: " + e.getMessage());
         }
     }
 
