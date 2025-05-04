@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.*;
 import model.WorkoutTableModel;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class DashboardWindow extends JFrame {
     private String username;
@@ -36,7 +38,7 @@ public class DashboardWindow extends JFrame {
         addCenterTable();
         addBottomButtons();
         loadAvailableDates();
-        refreshWorkoutView();
+        // SwingUtilities.invokeLater(this::refreshWorkoutView);
     }
 
     private void updateLogButtonLabel() {
@@ -63,7 +65,7 @@ public class DashboardWindow extends JFrame {
         });
 
         dateDropdown.addActionListener(e -> {
-            refreshWorkoutView();
+            refreshWorkoutView(LocalDate.now());
             updateLogButtonLabel();
         });
 
@@ -125,32 +127,46 @@ public class DashboardWindow extends JFrame {
         JButton exportButton = new JButton("Export CSV");
         exportButton.addActionListener(e -> exportAllWorkoutsToCSV());
 
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.addActionListener(e -> {
+            dispose(); 
+            new LoginWindow().setVisible(true); 
+        });
+        
+
         bottomPanel.add(exportButton);
         bottomPanel.add(trendsButton);
         bottomPanel.add(deleteButton);
         bottomPanel.add(estimateButton);
         bottomPanel.add(editButton);
+        bottomPanel.add(logoutButton);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    public void refreshWorkoutView() {
+    public void refreshWorkoutView(LocalDate fallbackDate) {
         if (isRefreshing) return;
         isRefreshing = true;
-
+    
         String selectedPretty = (String) dateDropdown.getSelectedItem();
-
+        String selectedDbDate = null;
+    
+        if (selectedPretty != null && prettyToDbDate.containsKey(selectedPretty)) {
+            selectedDbDate = prettyToDbDate.get(selectedPretty);
+        } else {
+            selectedDbDate = fallbackDate.toString();
+        }
+    
+        final String dbDateToUse = selectedDbDate;
+    
         new SwingWorker<ArrayList<Object[]>, Void>() {
             @Override
             protected ArrayList<Object[]> doInBackground() throws Exception {
                 ArrayList<Object[]> workouts = new ArrayList<>();
-                if (selectedPretty == null || !prettyToDbDate.containsKey(selectedPretty)) return workouts;
-                String selectedDbDate = prettyToDbDate.get(selectedPretty);
-
                 try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
                     String query = "SELECT id, workout_name, reps, time_spent, calories_burnt FROM workouts WHERE username = ? AND date = ?";
                     PreparedStatement stmt = conn.prepareStatement(query);
                     stmt.setString(1, username);
-                    stmt.setString(2, selectedDbDate);
+                    stmt.setString(2, dbDateToUse);
                     ResultSet rs = stmt.executeQuery();
                     while (rs.next()) {
                         workouts.add(new Object[]{
@@ -164,7 +180,7 @@ public class DashboardWindow extends JFrame {
                 }
                 return workouts;
             }
-
+    
             @Override
             protected void done() {
                 try {
@@ -187,7 +203,7 @@ public class DashboardWindow extends JFrame {
             PreparedStatement stmt = conn.prepareStatement("DELETE FROM workouts WHERE id = ?");
             stmt.setInt(1, id);
             stmt.executeUpdate();
-            refreshWorkoutView();
+            refreshWorkoutView(LocalDate.now());
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -210,7 +226,7 @@ public class DashboardWindow extends JFrame {
             stmt.setInt(1, calories);
             stmt.setInt(2, id);
             stmt.executeUpdate();
-            refreshWorkoutView();
+            refreshWorkoutView(LocalDate.now());
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -243,6 +259,14 @@ public class DashboardWindow extends JFrame {
             tableModel.setValueAt(timeField.getText(), row, 3);
             tableModel.setValueAt(calField.getText(), row, 4);
             isProgrammaticUpdate = false;
+        
+            Object[] data = tableModel.getRowData(row);
+            try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
+                saveEditedRowToDatabase(conn, data, lastOldReps, lastOldTime, lastOldCal);
+                refreshWorkoutView(LocalDate.now());
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -300,11 +324,11 @@ public class DashboardWindow extends JFrame {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
             dateDropdown.removeAllItems();
             prettyToDbDate.clear();
-
+    
             LocalDate today = LocalDate.now();
             LocalDate oneYearAgo = today.minusYears(1);
             LocalDate startDate = oneYearAgo;
-
+    
             PreparedStatement stmt = conn.prepareStatement("SELECT MIN(date) AS earliest FROM workouts WHERE username = ?");
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
@@ -312,16 +336,18 @@ public class DashboardWindow extends JFrame {
                 LocalDate dbDate = LocalDate.parse(rs.getString("earliest"));
                 if (dbDate.isBefore(oneYearAgo)) startDate = dbDate;
             }
-
+    
             for (LocalDate d = startDate; !d.isAfter(today); d = d.plusDays(1)) {
                 String pretty = formatPrettyDate(d);
                 dateDropdown.addItem(pretty);
                 prettyToDbDate.put(pretty, d.toString());
             }
-
+    
             String todayPretty = formatPrettyDate(today);
             dateDropdown.setSelectedItem(todayPretty);
 
+            refreshWorkoutView(LocalDate.now());
+    
         } catch (SQLException e) {
             e.printStackTrace();
         }

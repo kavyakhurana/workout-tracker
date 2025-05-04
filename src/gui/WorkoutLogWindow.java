@@ -142,7 +142,7 @@ public class WorkoutLogWindow extends JFrame {
                     boolean success = get();
                     if (success) {
                         JOptionPane.showMessageDialog(WorkoutLogWindow.this, "Workout saved!");
-                        dashboard.refreshWorkoutView();
+                        dashboard.refreshWorkoutView(LocalDate.now());
                         dispose();
                     } else {
                         JOptionPane.showMessageDialog(WorkoutLogWindow.this, "Failed to save workout.");

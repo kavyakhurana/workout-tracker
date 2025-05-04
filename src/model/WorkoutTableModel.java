@@ -14,8 +14,7 @@ public class WorkoutTableModel extends AbstractTableModel {
 
     public Object[] getRowData(int rowIndex) {
         if (rowIndex < 0 || rowIndex >= data.size()) {
-            System.out.println("⚠ getRowData() called with invalid row: " + rowIndex);
-            return new Object[] { -1, "", null, null, null };  // or throw exception if preferred
+            return new Object[] { -1, "", null, null, null };  
         }
         return data.get(rowIndex);
     }
