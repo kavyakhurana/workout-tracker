@@ -2,6 +2,7 @@ package model;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WorkoutTableModel extends AbstractTableModel {
     private String[] columns = {"ID", "Workout", "Reps", "Time (min)", "Calories"};
@@ -12,12 +13,17 @@ public class WorkoutTableModel extends AbstractTableModel {
     }
 
     public Object[] getRowData(int rowIndex) {
+        if (rowIndex < 0 || rowIndex >= data.size()) {
+            System.out.println("⚠ getRowData() called with invalid row: " + rowIndex);
+            return new Object[] { -1, "", null, null, null };  // or throw exception if preferred
+        }
         return data.get(rowIndex);
     }
 
-    public void updateData(ArrayList<Object[]> newData) {
-        this.data = newData;
-        fireTableDataChanged();
+    public void updateData(List<Object[]> newData) {
+        data.clear();
+        data.addAll(newData);
+        fireTableDataChanged(); 
     }
 
     @Override
