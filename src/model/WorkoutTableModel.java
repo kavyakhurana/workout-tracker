@@ -60,4 +60,11 @@ public class WorkoutTableModel extends AbstractTableModel {
             fireTableCellUpdated(rowIndex, columnIndex);
         }
     }
+
+    public int getRowIndexById(int id) {
+        for (int i = 0; i < data.size(); i++) {
+            if ((int) data.get(i)[0] == id) return i;
+        }
+        return -1;
+    }
 }

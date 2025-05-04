@@ -19,6 +19,9 @@ public class DashboardWindow extends JFrame {
     private WorkoutTableModel tableModel;
     private JComboBox<String> dateDropdown;
     private HashMap<String, String> prettyToDbDate = new HashMap<>();
+    private String lastOldReps = null;
+    private String lastOldTime = null;
+    private String lastOldCal = null;
 
     public DashboardWindow(String username) {
         this.username = username;
@@ -31,9 +34,7 @@ public class DashboardWindow extends JFrame {
         addTopPanel();
         addCenterTable();
         addBottomButtons();
-        System.out.println("Calling load avl dates");
         loadAvailableDates();
-        System.out.println("bye load avl dates");
         refreshWorkoutView();
     }
 
@@ -64,27 +65,31 @@ public class DashboardWindow extends JFrame {
     private void addCenterTable() {
         tableModel = new WorkoutTableModel(new ArrayList<>());
         table = new JTable(tableModel);
-
+    
         table.getModel().addTableModelListener(e -> {
             if (e.getType() == javax.swing.event.TableModelEvent.UPDATE) {
                 int row = e.getFirstRow();
-                SwingUtilities.invokeLater(() -> {
-                    Object[] rowData = tableModel.getRowData(row);
-                    System.out.println("SAVINGGG");
-                    saveEditedRowToDatabase(rowData);
-                });
+                Object[] rowData = tableModel.getRowData(row);
+                int id = (int) rowData[0];
+    
+                try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
+                    saveEditedRowToDatabase(conn, rowData, lastOldReps, lastOldTime, lastOldCal);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Failed to update workout: " + ex.getMessage());
+                }
             }
         });
-
+    
         table.getColumn("Calories").setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public void setValue(Object value) {
                 setText((value == null) ? "N/A" : value.toString());
             }
         });
-
+    
         table.setRowHeight(30);
-
+    
         scrollPane = new JScrollPane(table);
         scrollPane.setBorder(new EmptyBorder(10, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
@@ -137,6 +142,10 @@ public class DashboardWindow extends JFrame {
         String reps = rowData[2] == null ? "" : rowData[2].toString();
         String time = rowData[3] == null ? "" : rowData[3].toString();
         String calories = rowData[4] == null ? "" : rowData[4].toString();
+
+        lastOldReps = reps.isEmpty() ? null : reps;
+        lastOldTime = time.isEmpty() ? null : time;
+        lastOldCal = calories.isEmpty() ? null : calories;
     
         JTextField repsField = new JTextField(reps);
         JTextField timeField = new JTextField(time);
@@ -154,39 +163,12 @@ public class DashboardWindow extends JFrame {
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
     
         if (result == JOptionPane.OK_OPTION) {
-            try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
-                String update = "UPDATE workouts SET reps = ?, time_spent = ?, calories_burnt = ? WHERE id = ?";
-                PreparedStatement stmt = conn.prepareStatement(update);
-    
-                if (repsField.getText().trim().isEmpty()) {
-                    stmt.setNull(1, java.sql.Types.INTEGER);
-                } else {
-                    stmt.setInt(1, Integer.parseInt(repsField.getText().trim()));
-                }
-    
-                if (timeField.getText().trim().isEmpty()) {
-                    stmt.setNull(2, java.sql.Types.INTEGER);
-                } else {
-                    stmt.setInt(2, Integer.parseInt(timeField.getText().trim()));
-                }
-    
-                if (caloriesField.getText().trim().isEmpty()) {
-                    stmt.setNull(3, java.sql.Types.INTEGER);
-                } else {
-                    stmt.setInt(3, Integer.parseInt(caloriesField.getText().trim()));
-                }
-    
-                stmt.setInt(4, id);
-                stmt.executeUpdate();
-    
-                JOptionPane.showMessageDialog(this, "Workout updated!");
-                refreshWorkoutView();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Failed to save changes: " + ex.getMessage());
-            }
+            tableModel.setValueAt(repsField.getText().trim(), selectedRow, 2);
+            tableModel.setValueAt(timeField.getText().trim(), selectedRow, 3);
+            tableModel.setValueAt(caloriesField.getText().trim(), selectedRow, 4);
         }
     }
+    
 
     private void loadAvailableDates() {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
@@ -232,7 +214,6 @@ public class DashboardWindow extends JFrame {
     }
 
     public void refreshWorkoutView() {
-        System.out.println("CHANGES!!");
         new SwingWorker<ArrayList<Object[]>, Void>() {
             @Override
             protected ArrayList<Object[]> doInBackground() throws Exception {
@@ -298,76 +279,61 @@ public class DashboardWindow extends JFrame {
         }
     }
 
-    private void saveEditedRowToDatabase(Object[] rowData) {
+    private void saveEditedRowToDatabase(Connection conn, Object[] rowData, String oldRepsStr, String oldTimeStr, String oldCalStr) throws SQLException {
         int id = (int) rowData[0];
         String workoutName = (String) rowData[1];
         String newRepsStr = rowData[2] == null ? null : rowData[2].toString();
         String newTimeStr = rowData[3] == null ? null : rowData[3].toString();
         String newCalStr = rowData[4] == null ? null : rowData[4].toString();
     
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
+        boolean caloriesUnchanged = (oldCalStr == null && newCalStr == null) ||
+                                    (oldCalStr != null && oldCalStr.equals(newCalStr));
     
-            String fetch = "SELECT reps, time_spent, calories_burnt FROM workouts WHERE id = ?";
-            PreparedStatement fetchStmt = conn.prepareStatement(fetch);
-            fetchStmt.setInt(1, id);
-            ResultSet rs = fetchStmt.executeQuery();
+        boolean repsChanged = (oldRepsStr == null && newRepsStr != null) ||
+                              (oldRepsStr != null && !oldRepsStr.equals(newRepsStr));
     
-            if (rs.next()) {
-                String oldCalStr = rs.getString("calories_burnt");
-                String oldRepsStr = rs.getString("reps");
-                String oldTimeStr = rs.getString("time_spent");
-                
-                boolean caloriesUnchanged = (oldCalStr == null && newCalStr == null) ||
-                                            (oldCalStr != null && oldCalStr.equals(newCalStr));
-
-                System.out.println("old calories :"+oldCalStr);
-                System.out.println("new calories :"+newCalStr);
-                System.out.println("old reps :"+oldRepsStr);
-                System.out.println("new reps :"+newRepsStr);
-                System.out.println("old time :"+oldTimeStr);
-                System.out.println("new time :"+newTimeStr);
-                System.out.println("calories unchanged :"+caloriesUnchanged);
+        boolean timeChanged = (oldTimeStr == null && newTimeStr != null) ||
+                              (oldTimeStr != null && !oldTimeStr.equals(newTimeStr));
     
-                boolean repsChanged = (oldRepsStr == null && newRepsStr != null) ||
-                                      (oldRepsStr != null && !oldRepsStr.equals(newRepsStr));
+        System.out.println("old calories :" + oldCalStr);
+        System.out.println("new calories :" + newCalStr);
+        System.out.println("old reps :" + oldRepsStr);
+        System.out.println("new reps :" + newRepsStr);
+        System.out.println("old time :" + oldTimeStr);
+        System.out.println("new time :" + newTimeStr);
+        System.out.println("calories unchanged :" + caloriesUnchanged);
     
-                boolean timeChanged = (oldTimeStr == null && newTimeStr != null) ||
-                                      (oldTimeStr != null && !oldTimeStr.equals(newTimeStr));
+        Integer reps = (newRepsStr == null || newRepsStr.equals("N/A")) ? null : Integer.parseInt(newRepsStr);
+        Integer time = (newTimeStr == null || newTimeStr.equals("N/A")) ? null : Integer.parseInt(newTimeStr);
+        Integer calories = (newCalStr == null || newCalStr.equals("N/A")) ? null : Integer.parseInt(newCalStr);
     
-                Integer reps = (newRepsStr == null || newRepsStr.equals("N/A")) ? null : Integer.parseInt(newRepsStr);
-                Integer time = (newTimeStr == null || newTimeStr.equals("N/A")) ? null : Integer.parseInt(newTimeStr);
-                Integer calories = (newCalStr == null || newCalStr.equals("N/A")) ? null : Integer.parseInt(newCalStr);
-    
-
-                if (caloriesUnchanged && (repsChanged || timeChanged)) {
-                    Double estimated = CalorieEstimatorClient.estimateCalories(workoutName, reps, time);
-                    if (estimated != null) {
-                        calories = (int) Math.round(estimated);
-                        System.out.println("Auto-estimated calories: " + calories);
-                    }
-                }
-    
-                String update = "UPDATE workouts SET reps = ?, time_spent = ?, calories_burnt = ? WHERE id = ?";
-                PreparedStatement stmt = conn.prepareStatement(update);
-    
-                if (reps == null) stmt.setNull(1, java.sql.Types.INTEGER);
-                else stmt.setInt(1, reps);
-    
-                if (time == null) stmt.setNull(2, java.sql.Types.INTEGER);
-                else stmt.setInt(2, time);
-    
-                if (calories == null) stmt.setNull(3, java.sql.Types.INTEGER);
-                else stmt.setInt(3, calories);
-    
-                stmt.setInt(4, id);
-                stmt.executeUpdate();
+        if (caloriesUnchanged && (repsChanged || timeChanged)) {
+            Double estimated = CalorieEstimatorClient.estimateCalories(workoutName, reps, time);
+            if (estimated != null) {
+                calories = (int) Math.round(estimated);
+                System.out.println("Auto-estimated calories: " + calories);
             }
-    
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to save changes: " + e.getMessage());
         }
-    }
+    
+        
+            String update = "UPDATE workouts SET reps = ?, time_spent = ?, calories_burnt = ? WHERE id = ?";
+            PreparedStatement stmt = conn.prepareStatement(update);
+    
+            if (reps == null) stmt.setNull(1, java.sql.Types.INTEGER);
+            else stmt.setInt(1, reps);
+    
+            if (time == null) stmt.setNull(2, java.sql.Types.INTEGER);
+            else stmt.setInt(2, time);
+    
+            if (calories == null) stmt.setNull(3, java.sql.Types.INTEGER);
+            else stmt.setInt(3, calories);
+    
+            stmt.setInt(4, id);
+            stmt.executeUpdate();
+
+            
+        } 
+    
 
     private void estimateCaloriesForSelectedRow() {
         int selectedRow = table.getSelectedRow();

@@ -93,7 +93,7 @@ The idea for this project stemmed from my recent interest in working out and gai
 5. Compile:
    (Run this command inside the workout-tracker directory)
    ````
-   javac -cp "lib/*:src" src/main/Main.java
+    javac -cp "lib/*:src" -d out $(find src -name "*.java")
    ````
 
 4. Run:
