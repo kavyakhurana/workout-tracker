@@ -2,10 +2,24 @@
 
 This is a Java project for NYU Tandon's CS9053 - Intro to Java. In this repo, I have developed a Java Swing application to track, visualize, and manage your workouts with calorie estimates and data exports.
 
-The idea for this project stemmed from my recent interest in working out and gaining muscle, so making this project has beene extremely fun.
+The idea for this project stemmed from my recent interest in working out and gaining muscle, so making this project has been extremely fun.
 
 ---
 
+## Scope
+
+This project begins with user authentication. The user can register or log in to their account, the details of which are saved on locally, in an SQLite Database.
+Netx, the user is presented with a dashboard where they can log that day's workout, or a workout in the past (up to 1 year prior). They can log the name of their workout and optionally - the number of reps, time spent on the exercise and the calories burnt. 
+
+This project also hosts an API, running on SpringBoot, which will provide an estimate for the number of calories burnt by the exercise, and the API consists of some of the most popular exercises, and it is flexible enough that more can be added.
+
+The user can also view a chart of their workout history, ie, the amount of time they're spent working out over the previous week. Thir project provides a bar graph representation.
+
+The user can also edit a workout, and if they do not enter the new calories for the new number of reps or new time, the app will automatically estimate the calories using the API. Incase the exercise does not exist, the app will present a dialog box providing feedback.
+
+The user can also export their workouts into a CSV which will be saved in their Downloads folder.
+
+---
 
 ## Features
 
@@ -29,7 +43,7 @@ The idea for this project stemmed from my recent interest in working out and gai
 
 ### 📅 Historical View
 
-* Top panel dropdown shows **every date** from your earliest logged workout (up to 1 year ago) to today
+* Top panel dropdown shows every date from your earliest logged workout (up to 1 year ago) to today
 * Selecting a date shows all workouts for that day
 
 ### ✏️ Edit Workouts
@@ -96,6 +110,13 @@ The idea for this project stemmed from my recent interest in working out and gai
  o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
  ````
 
+Incase it does not, re-run
+   ````
+   ./mvnw clean install
+   ````
+
+
+
 Keep this running in one terminal, and open a new window of the terminal to compile and run the UI part
 
    
@@ -108,7 +129,7 @@ Keep this running in one terminal, and open a new window of the terminal to comp
 4. Run:
 (Run this command inside the workout-tracker directory)
    ````
-   java -cp "lib/*:src" main.Main
+   java -cp "lib/*:out" main.Main
    ````
 
 ---
@@ -127,6 +148,14 @@ src/
 │   └── CSVExporter.java
 └── model/                  # Table model for workouts
     └── WorkoutTableModel.java
+calorieestimator/
+├── src/                    # CalorieEstimator API               
+│   ├── main/
+│       └── java/com/kavyakhuranakk5554/calorieestimator
+│           ├── CalorieEstimatorController.java
+│           ├── CaloriesEstimatorApiApplication.java
+│           └── WorkoutRequest.java
+
 ```
 
 Made with ❤️ by Kavya Khurana 
