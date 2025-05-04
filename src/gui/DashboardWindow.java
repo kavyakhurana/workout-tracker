@@ -218,7 +218,13 @@ public class DashboardWindow extends JFrame {
         Integer reps = rowData[2] == null ? null : Integer.parseInt(rowData[2].toString());
         Integer time = rowData[3] == null ? null : Integer.parseInt(rowData[3].toString());
         Double est = CalorieEstimatorClient.estimateCalories(workout, reps, time);
-        if (est == null) return;
+        if (est == null) {
+            JOptionPane.showMessageDialog(this,
+                "We don't have an estimate for calories for this workout yet! Check back soon!",
+                "Estimate Not Available",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
         int calories = (int) Math.round(est);
 
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
@@ -288,6 +294,13 @@ public class DashboardWindow extends JFrame {
         if (calUnchanged && (repsChanged || timeChanged)) {
             Double est = CalorieEstimatorClient.estimateCalories(name, reps, time);
             if (est != null) cal = (int) Math.round(est);
+            else {
+                JOptionPane.showMessageDialog(this,
+                    "We don't have an estimate for calories for this workout yet! Check back soon!",
+                    "Estimate Not Available",
+                    JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
         }
 
         PreparedStatement stmt = conn.prepareStatement("UPDATE workouts SET reps = ?, time_spent = ?, calories_burnt = ? WHERE id = ?");
