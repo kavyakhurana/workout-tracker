@@ -14,6 +14,7 @@ import model.WorkoutTableModel;
 public class DashboardWindow extends JFrame {
     private String username;
     private JTable table;
+    private JButton logButton;
     private WorkoutTableModel tableModel;
     private JComboBox<String> dateDropdown;
     private HashMap<String, String> prettyToDbDate = new HashMap<>();
@@ -38,16 +39,35 @@ public class DashboardWindow extends JFrame {
         refreshWorkoutView();
     }
 
+    private void updateLogButtonLabel() {
+        String selected = (String) dateDropdown.getSelectedItem();
+        if (selected != null) {
+            logButton.setText("Log " + selected + "'s Workout");
+        } else {
+            logButton.setText("Log Workout");
+        }
+    }
+
     private void addTopPanel() {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JLabel welcome = new JLabel("Welcome, " + username + "!");
         welcome.setFont(new Font("Arial", Font.BOLD, 18));
 
-        JButton logButton = new JButton("Log Today's Workout");
-        logButton.addActionListener(e -> new WorkoutLogWindow(username, this).setVisible(true));
-
+        logButton = new JButton();
         dateDropdown = new JComboBox<>();
-        dateDropdown.addActionListener(e -> refreshWorkoutView());
+
+        logButton.addActionListener(e -> {
+            String selected = (String) dateDropdown.getSelectedItem();
+            String dbDate = prettyToDbDate.getOrDefault(selected, LocalDate.now().toString());
+            new WorkoutLogWindow(username, this, dbDate).setVisible(true);
+        });
+
+        dateDropdown.addActionListener(e -> {
+            refreshWorkoutView();
+            updateLogButtonLabel();
+        });
+
+        updateLogButtonLabel();
 
         topPanel.add(welcome);
         topPanel.add(logButton);

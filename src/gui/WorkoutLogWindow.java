@@ -3,13 +3,52 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
-import java.sql.Types;
 import java.time.LocalDate;
 
 public class WorkoutLogWindow extends JFrame {
     private JTextField workoutField, repsField, timeField, caloriesField;
     private String username;
     private DashboardWindow dashboard;
+    private String loggedDate;
+
+    public WorkoutLogWindow(String username, DashboardWindow dashboard, String loggedDate) {
+        this.username = username;
+        this.dashboard = dashboard;
+        this.loggedDate = loggedDate;
+
+        setTitle("Log Workout");
+        setSize(350, 350);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        panel.add(new JLabel("Workout Name:"));
+        workoutField = new JTextField();
+        panel.add(workoutField);
+
+        panel.add(new JLabel("Reps:"));
+        repsField = new JTextField();
+        panel.add(repsField);
+
+        panel.add(new JLabel("Time (min):"));
+        timeField = new JTextField();
+        panel.add(timeField);
+
+        panel.add(new JLabel("Calories Burnt:"));
+        caloriesField = new JTextField();
+        panel.add(caloriesField);
+
+        JButton saveButton = new JButton("Save Workout");
+        panel.add(saveButton);
+
+        add(panel);
+
+        saveButton.addActionListener(e -> saveWorkout());
+    }
+
+    
 
     public WorkoutLogWindow(String username, DashboardWindow dashboard) {
         this.username = username;
@@ -53,7 +92,7 @@ public class WorkoutLogWindow extends JFrame {
         String reps = repsField.getText().trim();
         String time = timeField.getText().trim();
         String calories = caloriesField.getText().trim();
-        String date = LocalDate.now().toString();
+        String date = (loggedDate != null) ? loggedDate : LocalDate.now().toString();
 
         if (workout.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Workout name is required.");
