@@ -68,8 +68,11 @@ public class DashboardWindow extends JFrame {
         table.getModel().addTableModelListener(e -> {
             if (e.getType() == javax.swing.event.TableModelEvent.UPDATE) {
                 int row = e.getFirstRow();
-                Object[] rowData = tableModel.getRowData(row);
-                saveEditedRowToDatabase(rowData);
+                SwingUtilities.invokeLater(() -> {
+                    Object[] rowData = tableModel.getRowData(row);
+                    System.out.println("SAVINGGG");
+                    saveEditedRowToDatabase(rowData);
+                });
             }
         });
 
@@ -317,6 +320,12 @@ public class DashboardWindow extends JFrame {
                 boolean caloriesUnchanged = (oldCalStr == null && newCalStr == null) ||
                                             (oldCalStr != null && oldCalStr.equals(newCalStr));
 
+                System.out.println("old calories :"+oldCalStr);
+                System.out.println("new calories :"+newCalStr);
+                System.out.println("old reps :"+oldRepsStr);
+                System.out.println("new reps :"+newRepsStr);
+                System.out.println("old time :"+oldTimeStr);
+                System.out.println("new time :"+newTimeStr);
                 System.out.println("calories unchanged :"+caloriesUnchanged);
     
                 boolean repsChanged = (oldRepsStr == null && newRepsStr != null) ||
