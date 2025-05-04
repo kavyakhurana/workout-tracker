@@ -24,7 +24,7 @@ The idea for this project stemmed from my recent interest in working out and gai
   * Time spent (optional)
   * Calories (optional)
     
-* Auto-associates current date with new workouts to display all your workouts in a tabular format, sorted by date
+* You can log workouts for different days, even past days!
   
 
 ### 📅 Historical View
@@ -89,6 +89,15 @@ The idea for this project stemmed from my recent interest in working out and gai
    ./mvnw spring-boot:run
    ````
    This will get the SpringBoot API running for calorie estimation
+
+   This command MUST produce and output like:
+
+ ````
+ o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+ ````
+
+Keep this running in one terminal, and open a new window of the terminal to compile and run the UI part
+
    
 5. Compile:
    (Run this command inside the workout-tracker directory)
