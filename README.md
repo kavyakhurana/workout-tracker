@@ -158,6 +158,26 @@ calorieestimator/
 
 ```
 
+---
+
+## 🎉 3 Advanced Java Concepts Used
+
+* Multithreading - inside the refreshWorkoutView() function (using SwingWorker)
+  
+    This ensures that the UI is not frozen when querying workouts from the SQLite database, which can take time.
+    The doInBackground() function runs on a separate background thread, fetching workout data from the SQLite database.
+
+  
+* Databases
+
+    This project uses a local SQLite Database to store the user's login data and workout data.
+
+ 
+* API Design with SpringBoot
+
+   I designed and implemented a RESTful endpoint using SpringBoot to get an estimate of the calories burnt in an exercise. 
+---
+
 Made with ❤️ by Kavya Khurana 
 
 
