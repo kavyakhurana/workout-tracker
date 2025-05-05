@@ -178,6 +178,17 @@ calorieestimator/
    I designed and implemented a RESTful endpoint using SpringBoot to get an estimate of the calories burnt in an exercise. 
 ---
 
+## 📹 Video Demo
+
+
+
+
+https://github.com/user-attachments/assets/015ac5b0-5bd5-4e50-8237-ea0f55c8dfed
+
+
+
+
+
 Made with ❤️ by Kavya Khurana 
 
 
