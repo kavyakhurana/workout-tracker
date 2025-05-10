@@ -123,9 +123,9 @@ Keep this running in one terminal, and open a new window of the terminal to comp
 
    Please use the Eclipse IDE to run this project, You can start by importing this project. It might show some errors in the ```calorieestimator``` directory, like it does in my video, but that is only because I don't have maven installed on Eclipse. 
 
-As long as you have run maven in Step 3, this should not be an issue.
-
-Please set your build path to ```workout-tracker/src```. Then right click on the Main.java file (in the ```main``` package, and run it as a java application.
+   As long as you have run maven in Step 3, this should not be an issue.
+   
+   Please set your build path to ```workout-tracker/src```. Then right click on the Main.java file (in the ```main``` package, and run it as a java application.
 
 
 ---
