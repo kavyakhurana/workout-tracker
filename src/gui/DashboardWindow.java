@@ -323,16 +323,22 @@ public class DashboardWindow extends JFrame {
 
     private String formatPrettyDate(LocalDate date) {
         int d = date.getDayOfMonth();
-        String suffix = (d >= 11 && d <= 13) ? "th" : switch (d % 10) {
-            case 1 -> "st";
-            case 2 -> "nd";
-            case 3 -> "rd";
-            default -> "th";
-        };
+        String suffix;
+
+        if (d >= 11 && d <= 13) {
+            suffix = "th";
+        } else {
+            switch (d % 10) {
+                case 1: suffix = "st"; break;
+                case 2: suffix = "nd"; break;
+                case 3: suffix = "rd"; break;
+                default: suffix = "th"; break;
+            }
+        }
+
         String month = date.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
         return d + suffix + " " + month + " " + date.getYear();
     }
-
     public void loadAvailableDates() {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:workout_tracker.db")) {
             dateDropdown.removeAllItems();
