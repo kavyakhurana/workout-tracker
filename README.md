@@ -9,7 +9,7 @@ The idea for this project stemmed from my recent interest in working out and gai
 ## Scope
 
 This project begins with user authentication. The user can register or log in to their account, the details of which are saved on locally, in an SQLite Database.
-Netx, the user is presented with a dashboard where they can log that day's workout, or a workout in the past (up to 1 year prior). They can log the name of their workout and optionally - the number of reps, time spent on the exercise and the calories burnt. 
+The user is presented with a dashboard where they can log that day's workout, or a workout in the past (up to 1 year prior). They can log the name of their workout and optionally - the number of reps, time spent on the exercise and the calories burnt. 
 
 This project also hosts an API, running on SpringBoot, which will provide an estimate for the number of calories burnt by the exercise, and the API consists of some of the most popular exercises, and it is flexible enough that more can be added.
 
@@ -179,7 +179,10 @@ calorieestimator/
 
 
 
-https://github.com/user-attachments/assets/015ac5b0-5bd5-4e50-8237-ea0f55c8dfed
+
+https://github.com/user-attachments/assets/d8083360-293c-4624-a42d-3e9ef1844583
+
+
 
 
 
