@@ -119,18 +119,14 @@ Incase it does not, re-run
 
 Keep this running in one terminal, and open a new window of the terminal to compile and run the UI part
 
-   
-5. Compile:
-   (Run this command inside the workout-tracker directory)
-   ````
-    javac -cp "lib/*:src" -d out $(find src -name "*.java")
-   ````
+4. Compile and Run:
 
-4. Run:
-(Run this command inside the workout-tracker directory)
-   ````
-   java -cp "lib/*:out" main.Main
-   ````
+   Please use the Eclipse IDE to run this project, You can start by importing this project. It might show some errors in the ```calorieestimator``` directory, like it does in my video, but that is only because I don't have maven installed on Eclipse. 
+
+As long as you have run maven in Step 3, this should not be an issue.
+
+Please set your build path to ```workout-tracker/src```. Then right click on the Main.java file (in the ```main``` package, and run it as a java application.
+
 
 ---
 
